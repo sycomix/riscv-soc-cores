@@ -25,8 +25,8 @@ class quartus_rpt():
 
         self.clocks = {}
 
-        flowfile = "%s.flow.rpt" % (filepref,)
-        stafile = "%s.sta.rpt" % (filepref,)
+        flowfile = f"{filepref}.flow.rpt"
+        stafile = f"{filepref}.sta.rpt"
 
         flowsumm = False
         fmaxflag = False
@@ -34,8 +34,7 @@ class quartus_rpt():
         txt = open(flowfile, 'r')
         for line in txt:
 
-            m = re.search(r"^; Flow Summary", line)
-            if m:
+            if m := re.search(r"^; Flow Summary", line):
                 flowsumm = True
                 line = txt.next()
                 continue
@@ -46,37 +45,38 @@ class quartus_rpt():
                     flowsumm = False
                     continue
 
-                # Quartus (II|Prime) Version
-                m = re.search(r"^; Quartus [^;]* Version\s+; (.+) ;", line)
-                if m:
+                if m := re.search(r"^; Quartus [^;]* Version\s+; (.+) ;", line):
                     self.quartus_vers = m.groups()[0]
                     self.quartus_short_vers = re.sub(" Build.*$", "", self.quartus_vers)
                     continue
 
-                m = re.search(r"^; Device\s+; (\S+)", line)
-                if m:
+                if m := re.search(r"^; Device\s+; (\S+)", line):
                     self.device = m.groups()[0]
                     continue
 
-                m = re.search(r"^; Family\s+; (\S+)", line)
-                if m:
+                if m := re.search(r"^; Family\s+; (\S+)", line):
                     self.family = m.groups()[0]
                     continue
 
-                m = re.search(r"^; Total logic elements\s+; ([0-9,]+) \/ ([0-9,]+) \( [0-9]* \% \)", line)
-                if m:
+                if m := re.search(
+                    r"^; Total logic elements\s+; ([0-9,]+) \/ ([0-9,]+) \( [0-9]* \% \)",
+                    line,
+                ):
                     self.used_le = re.sub(",", "", m.groups()[0])
                     self.total_le = re.sub(",", "", m.groups()[1])
                     continue
 
-                m = re.search(r"^; Total pins\s+; ([0-9]+) \/ ([0-9]+) \( [0-9]* \% \)", line)
-                if m:
+                if m := re.search(
+                    r"^; Total pins\s+; ([0-9]+) \/ ([0-9]+) \( [0-9]* \% \)", line
+                ):
                     self.used_pins = m.groups()[0]
                     self.total_pins = m.groups()[1]
                     continue
 
-                m = re.search(r"^; Total memory bits\s+; ([0-9,]+) \/ ([0-9,]+) \( [0-9]* \% \)", line)
-                if m:
+                if m := re.search(
+                    r"^; Total memory bits\s+; ([0-9,]+) \/ ([0-9,]+) \( [0-9]* \% \)",
+                    line,
+                ):
                     self.used_mbits = re.sub(",", "", m.groups()[0])
                     self.total_mbits = re.sub(",", "", m.groups()[1])
                     continue
@@ -100,8 +100,9 @@ class quartus_rpt():
                     fmaxflag = False
                     continue
 
-                m = re.search(r"^; ([0-9\.]+) MHz\s+; ([0-9\.]+) MHz\s+; ([^ ]+)\s+;", line)
-                if m:
+                if m := re.search(
+                    r"^; ([0-9\.]+) MHz\s+; ([0-9\.]+) MHz\s+; ([^ ]+)\s+;", line
+                ):
                     fmax = m.groups()[0]
                     restrfmax = m.groups()[1]
                     clockname = m.groups()[2]
@@ -134,10 +135,7 @@ class quartus_rpt():
                     "used_mbits",
                 )
 
-        s = []
-        for i in self.csv(names):
-            s.append(i)
-
+        s = list(self.csv(names))
         for i in sorted(self.clocks.keys()):
             (fmax, restrfmax, clockname) = self.clocks[i]
             s.append(fmax)
@@ -157,8 +155,8 @@ for (quartuss, boards) in (
     for qv in quartuss:
         for b in boards:
 
-            SYSTEM = "%s-picorv32-wb-soc" % (b,)
-            filepref = "build.q%s/%s_0/bld-quartus/%s_0" % (qv, SYSTEM, SYSTEM)
+            SYSTEM = f"{b}-picorv32-wb-soc"
+            filepref = f"build.q{qv}/{SYSTEM}_0/bld-quartus/{SYSTEM}_0"
             q = quartus_rpt(filepref)
 
             data.append(q.data_tuple())
